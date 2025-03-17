@@ -1,0 +1,28 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 19,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "my_preset",
+            "hidden": false,
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "NVSHMEM_BUILD_TESTS": "ON"
+            },
+            "environment": {
+                "CUDA_HOME": "/home/pj24001791/ku40000464/nvhpc_24.11/nvhpc_24.11_install/Linux_x86_64/24.11/cuda/12.6",
+                "NVSHMEM_HOME": "/home/pj24001791/ku40000464/nvhpc_24.11/nvhpc_24.11_install/Linux_x86_64/24.11/comm_libs/nvshmem",
+                "MPI_HOME": "/home/pj24001791/ku40000464/nvhpc_24.11/nvhpc_24.11_install/Linux_x86_64/24.11/comm_libs/12.6/hpcx/hpcx-2.20/ompi",
+                "LD_LIBRARY_PATH": "$CUDA_HOME/lib64:$MPI_HOME/lib:$NVSHMEM_HOME/lib:$LD_LIBRARY_PATH"
+
+                
+            }
+        }
+    ]
+}

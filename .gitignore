@@ -1,0 +1,23 @@
+*.out
+*.out1
+*.log
+*.err
+*.stat
+*.stats
+*.csv
+*.jar
+*.class
+*.zip
+*.nsys-rep
+# Don't ignore .gitignore itself
+!.gitignore
+
+
+
+
+**/build/
+
+
+
+# ignore all .cache
+**/.cache/
