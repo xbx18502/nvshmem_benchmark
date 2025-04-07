@@ -29,9 +29,15 @@ export NVSHMEM_BOOTSTRAP=MPI
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 2 --map-by ppr:2:node \
-./mpi_init_put_bw.out "
+./put_bw_inside.out "
 
-for i in {1..10}
+profileWithNsys=" \
+nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
+mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
+-np 2 --map-by ppr:2:node \
+./put_bw_inside.out "
+
+for i in {1..1}
 do
     echo "iteration: ${i}"
     eval ${task_mpi}
