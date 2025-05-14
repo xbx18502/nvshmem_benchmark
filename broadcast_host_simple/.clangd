@@ -1,0 +1,34 @@
+# .clangd
+CompileFlags:
+  # 仅添加基本的 CUDA 支持标志，让 compile_commands.json 处理其他标志
+  Add:
+  - -xcuda
+  - -include sstream
+  - -include assert
+  - -D__CUDA_ARCH__=520
+  - --cuda-gpu-arch=sm_90
+  - --cuda-path=/home/pj24001791/ku40000464/nvhpc_24.9/nvhpc_24.9_install_path/Linux_x86_64/24.9/cuda/12.6
+  - -std=c++11
+
+  Compiler: nvcc
+
+  Remove: 
+  - -forward-unknown-to-host-compiler
+  - --generate-code=arch=compute_70,code=[compute_70,sm_70]
+  - --generate-code=arch=compute_80,code=[compute_80,sm_80]
+  - --generate-code=arch=compute_90,code=[compute_90,sm_90]
+  - -Xcompiler=-fPIE
+  - -Xcompiler=-fPIC
+  - -G
+  - --maxrregcount=32
+
+If:
+  PathMatch: .*\.(cu|cuh|cpp|h|c)$
+  
+Index:
+  Background: Build
+
+Diagnostics:
+  Suppress: 
+    - unknown-cuda-version
+    - unknown-warning-option
