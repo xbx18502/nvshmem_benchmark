@@ -1,6 +1,6 @@
 #!/bin/bash
 #PJM -L rscgrp=b-batch
-#PJM -L node=2
+#PJM -L node=1
 #PJM -L elapse=00:05:00
 #PJM -j
 #PJM -S
@@ -28,11 +28,17 @@ export NVSHMEM_BOOTSTRAP=MPI
 # -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 2 --map-by ppr:1:node \
-./iterate_inside_kernel.out "
+-np 2 --map-by ppr:2:node \
+./mpi_init_put_bw.out "
 
-for i in {1..1}
+profileWithNsys=" \
+mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
+-np 2 --map-by ppr:2:node \
+nsys profile -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
+./mpi_init_put_bw.out "
+
+for i in {1}
 do
     echo "iteration: ${i}"
-    eval ${task_mpi}
+    eval ${profileWithNsys}
 done

@@ -28,8 +28,15 @@ export NVSHMEM_BOOTSTRAP=MPI
 # -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 2 --map-by ppr:1:node \
-./iterate_inside_kernel.out "
+-np 8 --map-by ppr:4:node \
+--map-by socket --bind-to socket   \
+../fcollect_latency/fcollect.out "
+
+profileWithNsys=" \
+nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
+mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
+-np 8 --map-by ppr:4:node \
+../fcollect_latency/fcollect.out "
 
 for i in {1..1}
 do

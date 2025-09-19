@@ -1,11 +1,3 @@
-#!/bin/bash
-#PJM -L rscgrp=b-batch
-#PJM -L node=2
-#PJM -L elapse=00:05:00
-#PJM -j
-#PJM -S
-
-
 module purge
 module load nvidia/24.11 nvhpcx/24.11-cuda12
 
@@ -21,18 +13,11 @@ export MPI_HOME="/home/app/nvhpc/24.11/Linux_x86_64/24.11/comm_libs/12.6/hpcx/hp
 # NCCL settings
 export NCCL_HOME="/home/app/nvhpc/24.11/Linux_x86_64/24.11/comm_libs/nccl"
 
-export OMPI_MCA_plm_rsh_agent="/usr/bin/pjrsh"
+compile_static=" \
+nvcc -rdc=true -ccbin g++ -gencode=$NVCC_GENCODE -I \
+$NVSHMEM_HOME/include:$MPI_HOME/include mpi_init_put_bw.cu -o \
+mpi_init_put_bw.out -L $NVSHMEM_HOME/lib:$MPI_HOME/lib \
+-lmpi -lnvshmem -lnvidia-ml -lcuda -lcudart "
 
-export NVSHMEM_BOOTSTRAP=MPI
-
-# -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
-task_mpi=" \
-mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 2 --map-by ppr:1:node \
-./iterate_inside_kernel.out "
-
-for i in {1..1}
-do
-    echo "iteration: ${i}"
-    eval ${task_mpi}
-done
+echo ${compile_static}
+eval ${compile_static}
