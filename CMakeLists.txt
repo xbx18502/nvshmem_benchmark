@@ -1,5 +1,5 @@
 # 设置 CMake 最低版本要求
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.18)
 
 # 设置项目名称
 project(nvshmem_benchmark)
@@ -9,4 +9,6 @@ add_subdirectory(fcollect_latency)
 add_subdirectory(put_latency)
 add_subdirectory(put_latency_nbi)
 add_subdirectory(put_bw)
-add_subdirectory(broadcast_host)
+add_subdirectory(broadcast)
+add_subdirectory(alltoall_latency)
+add_subdirectory(reduction)
