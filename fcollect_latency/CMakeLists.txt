@@ -27,7 +27,7 @@ set(CUDAToolkit_ROOT "/home/app/nvhpc/24.11/Linux_x86_64/24.11/cuda/12.6")
 add_executable(fcollect fcollect.cu utils.cu)
 
 install(TARGETS fcollect
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR})
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
 
 # Find packages
@@ -35,8 +35,8 @@ install(TARGETS fcollect
 # find_package(CUDA REQUIRED)
 
 # Set CUDA flags
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -rdc=true -ccbin g++ ")
-set(CMAKE_CUDA_LINK_FLAGS "${CMAKE_CUDA_LINK_FLAGS} -rdc=true")
+# set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -rdc=true -ccbin g++ ")
+# set(CMAKE_CUDA_LINK_FLAGS "${CMAKE_CUDA_LINK_FLAGS} -rdc=true")
 
 # Enable device code linking
 set_target_properties(fcollect PROPERTIES

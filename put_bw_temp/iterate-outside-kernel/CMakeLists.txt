@@ -35,8 +35,8 @@ install(TARGETS put_bw_outside
 # find_package(CUDA REQUIRED)
 
 # Set CUDA flags
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -rdc=true -ccbin g++ ")
-set(CMAKE_CUDA_LINK_FLAGS "${CMAKE_CUDA_LINK_FLAGS} -rdc=true")
+# set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -rdc=true -ccbin g++ ")
+# set(CMAKE_CUDA_LINK_FLAGS "${CMAKE_CUDA_LINK_FLAGS} -rdc=true")
 
 # Enable device code linking
 set_target_properties(put_bw_outside PROPERTIES

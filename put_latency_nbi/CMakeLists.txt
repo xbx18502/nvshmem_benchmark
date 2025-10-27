@@ -27,20 +27,20 @@ set(CUDAToolkit_ROOT "/home/app/nvhpc/24.11/Linux_x86_64/24.11/cuda/12.6")
 add_executable(iterate_inside_kernel_nbi iterate_inside_kernel.cu)
 
 install(TARGETS iterate_inside_kernel_nbi
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR})
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 # Find packages
 # find_package(MPI REQUIRED)
 # find_package(CUDA REQUIRED)
 
 # Set CUDA flags
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -rdc=true -ccbin g++ ")
-set(CMAKE_CUDA_LINK_FLAGS "${CMAKE_CUDA_LINK_FLAGS} -rdc=true")
+# set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -rdc=true -ccbin g++ ")
+# set(CMAKE_CUDA_LINK_FLAGS "${CMAKE_CUDA_LINK_FLAGS} -rdc=true")
 
 # Enable device code linking
 set_target_properties(iterate_inside_kernel_nbi PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    OUTPUT_NAME "iterate_inside_kernel_nbi.out"
+    OUTPUT_NAME "put_latency_nbi.out"
 )
 
 
