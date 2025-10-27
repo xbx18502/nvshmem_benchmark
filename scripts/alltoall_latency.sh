@@ -29,15 +29,16 @@ export NVSHMEM_BOOTSTRAP=MPI
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
---map-by socket --bind-to socket   \
-../alltoall_latency/alltoall.out"
+--bind-to socket   \
+../bin/alltoall.out"
 
 profileWithNsys=" \
 nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
-../alltoall_latency/alltoall.out"
+../bin/alltoall.out"
 
+echo "command: ${task_mpi}"
 for i in {1..1}
 do
     echo "iteration: ${i}"

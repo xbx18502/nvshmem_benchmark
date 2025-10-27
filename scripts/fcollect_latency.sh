@@ -26,18 +26,19 @@ export OMPI_MCA_plm_rsh_agent="/usr/bin/pjrsh"
 export NVSHMEM_BOOTSTRAP=MPI
 
 # -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
+# --map-by socket --bind-to socket 
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
---map-by socket --bind-to socket   \
-../fcollect_latency/fcollect.out "
+--bind-to numa \
+../bin/fcollect.out "
 
 profileWithNsys=" \
 nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
 ../fcollect_latency/fcollect.out "
-
+echo "command: ${task_mpi}"
 for i in {1..1}
 do
     echo "iteration: ${i}"
