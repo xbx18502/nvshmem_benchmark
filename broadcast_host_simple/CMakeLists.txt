@@ -31,7 +31,7 @@ add_executable(broadcast broadcast.cu
 )
 
 install(TARGETS broadcast
-        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR})
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR/bin})
 # Find packages
 # find_package(MPI REQUIRED)
 # find_package(CUDA REQUIRED)

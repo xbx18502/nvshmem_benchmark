@@ -25,19 +25,23 @@ export OMPI_MCA_plm_rsh_agent="/usr/bin/pjrsh"
 
 export NVSHMEM_BOOTSTRAP=MPI
 
-# -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
+# -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 
+# --map-by socket --bind-to socket
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
---map-by socket --bind-to socket   \
-../broadcast_host/broadcast.out"
+--bind-to socket \
+-x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
+../bin/broadcast.out"
 
 profileWithNsys=" \
 nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
-../broadcast_host/broadcast.out "
+../broadcast/broadcast.out "
 
+echo "command: ${task_mpi}"
+echo "node = ${PJM_O_NODEINF}"
 for i in {1..1}
 do
     echo "iteration: ${i}"
