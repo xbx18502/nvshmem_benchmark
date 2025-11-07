@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.18)
 set(CMAKE_CUDA_COMPILER "/home/app/nvhpc/24.11/Linux_x86_64/24.11/cuda/12.6/bin/nvcc")
 set(CMAKE_CUDA_COMPILER_FORCED TRUE)
-project(nvshmem_test CUDA CXX)
+project(put_bw_inside CUDA CXX)
 
 # Set CUDA architecture
-set(CMAKE_CUDA_ARCHITECTURES 90)
+set(CMAKE_CUDA_ARCHITECTURES 70)
 set(CMAKE_CUDA_COMPILER_FORCED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(NVCC_GENCODE "arch=compute_90,code=sm_90")
+set(NVCC_GENCODE "arch=compute_70,code=sm_70")
 set(NVSHMEM_HOME "/home/app/nvhpc/24.11/Linux_x86_64/24.11/comm_libs/12.6/nvshmem")
 set(HYDRA_HOME "$NVSHMEM_HOME")
 set(CUDA_HOME "/home/app/nvhpc/24.11/Linux_x86_64/24.11/cuda/12.6")

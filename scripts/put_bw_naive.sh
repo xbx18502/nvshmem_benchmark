@@ -25,24 +25,20 @@ export OMPI_MCA_plm_rsh_agent="/usr/bin/pjrsh"
 
 export NVSHMEM_BOOTSTRAP=MPI
 
-# -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 
+# -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
 # --map-by socket --bind-to socket
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 8 --map-by ppr:4:node \
+-np 2 --map-by ppr:1:node \
 --bind-to numa \
--x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
-../bin/broadcast.out"
+../bin/put_bw_naive.out "
 
 profileWithNsys=" \
 nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 8 --map-by ppr:4:node \
-../broadcast/broadcast.out "
-
+-np 2 --map-by ppr:1:node \
+../put_bw/put_bw_inside.out "
 echo "command: ${task_mpi}"
-echo "node = ${PJM_O_NODEINF}"
-echo "root = 0"
 for i in {1..1}
 do
     echo "iteration: ${i}"

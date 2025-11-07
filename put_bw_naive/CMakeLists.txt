@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 set(CMAKE_CUDA_COMPILER "/home/app/nvhpc/24.11/Linux_x86_64/24.11/cuda/12.6/bin/nvcc")
 set(CMAKE_CUDA_COMPILER_FORCED TRUE)
-project(nvshmem_test CUDA CXX)
+project(put_bw_naive CUDA CXX)
 
 # Set CUDA architecture
 set(CMAKE_CUDA_ARCHITECTURES 70)
@@ -24,10 +24,12 @@ set(NCCL_HOME "/home/app/nvhpc/24.11/Linux_x86_64/24.11/comm_libs/nccl")
 set(CUDAToolkit_ROOT "/home/app/nvhpc/24.11/Linux_x86_64/24.11/cuda/12.6")
 
 # Add executable
-add_executable(iterate_inside_kernel iterate_inside_kernel.cu)
+add_executable(put_bw_naive put_bw_naive.cu )
 
-install(TARGETS iterate_inside_kernel
+install(TARGETS put_bw_naive
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+
+
 # Find packages
 # find_package(MPI REQUIRED)
 # find_package(CUDA REQUIRED)
@@ -37,27 +39,27 @@ install(TARGETS iterate_inside_kernel
 # set(CMAKE_CUDA_LINK_FLAGS "${CMAKE_CUDA_LINK_FLAGS} -rdc=true")
 
 # Enable device code linking
-set_target_properties(iterate_inside_kernel PROPERTIES
+set_target_properties(put_bw_naive PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    OUTPUT_NAME "put_latency.out"
+    OUTPUT_NAME "put_bw_naive.out"
 )
 
 
 # Set include directories
-target_include_directories(iterate_inside_kernel PRIVATE
+target_include_directories(put_bw_naive PRIVATE
     ${NVSHMEM_HOME}/include
     ${MPI_HOME}/include
 )
 
 # Set link directories
-target_link_directories(iterate_inside_kernel PRIVATE
+target_link_directories(put_bw_naive PRIVATE
     ${NVSHMEM_HOME}/lib
     ${MPI_HOME}/lib
 )
 
 # Link libraries
-target_link_libraries(iterate_inside_kernel PRIVATE
+target_link_libraries(put_bw_naive PRIVATE
     mpi
     nvshmem
     nvidia-ml
