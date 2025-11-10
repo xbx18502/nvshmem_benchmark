@@ -177,7 +177,7 @@ int main (int argc, char *argv[]) {
     mype_node = nvshmem_team_my_pe(NVSHMEMX_TEAM_NODE);
     int global_pe = nvshmem_my_pe();
     std::cout<<"complete nvshmemx_init_attr"<<std::endl;
-    CUDA_CHECK(cudaSetDevice(mype_node));
+    CUDA_CHECK(cudaSetDevice(global_pe));
     CUDA_CHECK(cudaStreamCreate(&stream));
     std::cout<<"complete cudaSetDevice"<<std::endl;
     double *destination = (double *) nvshmem_malloc (sizeof(double)*message_size);
@@ -194,7 +194,7 @@ int main (int argc, char *argv[]) {
     int size;
         #define HEADER "# " "OSU OpenSHMEM Put Bandwidth Test" " v" "7.5" "\n"
     #define FIELD_WIDTH 18
-    if (0 == mype_node) {
+    if (0 == global_pe) {
         fprintf(stdout, HEADER);
         fprintf(stdout, "%-*s%*s\n", 10, "# Size", FIELD_WIDTH,
                 "Bandwidth (MB/s)");
@@ -212,11 +212,11 @@ int main (int argc, char *argv[]) {
         }
         //nvshmemx_barrier_all_on_stream(stream);
         //nvshmem_barrier_all();
-        if (0 == mype_node) {
+        if (0 == global_pe) {
             CUDA_CHECK(cudaDeviceSynchronize());
             cudaEventRecord(start);
             for(int i = 0;i<loop;i++){
-                bw<<<4,1024>>> (destination, size, mype_node);
+                bw<<<4,1024>>> (destination, size, global_pe);
                 cudaDeviceSynchronize();
                 nvshmem_quiet();
             }
@@ -238,7 +238,7 @@ int main (int argc, char *argv[]) {
         double mb_total = 0.0;
         double t_total = 0.0;
         float milliseconds = 0.0;
-        if (0 == mype_node) {
+        if (0 == global_pe) {
             mb_total = size * loop *8/ ( 1e6);
             cudaEventElapsedTime(&milliseconds, start, stop);
             t_total = milliseconds/1e3;
@@ -266,12 +266,12 @@ int main (int argc, char *argv[]) {
         }
         //nvshmemx_barrier_all_on_stream(stream);
         //nvshmem_barrier_all();
-        if (0 == mype_node) {
+        if (0 == global_pe) {
             CUDA_CHECK(cudaDeviceSynchronize());
             CUDA_CHECK(cudaMemset(counter_d, 0, sizeof(unsigned int) * 2));
             cudaEventRecord(start);
 
-            bw4<<<4,1024>>> (destination, counter_d, size, mype_node, loop);
+            bw4<<<4,1024>>> (destination, counter_d, size, global_pe, loop);
             // Wait for kernel to complete on device
             CUDA_CHECK(cudaDeviceSynchronize());
             // Ensure all NVSHMEM puts are completed remotely
@@ -290,7 +290,7 @@ int main (int argc, char *argv[]) {
         double mb_total = 0.0;
         double t_total = 0.0;
         float milliseconds = 0.0;
-        if (0 == mype_node) {
+        if (0 == global_pe) {
             mb_total = size * loop *8/ ( 1e6);
             cudaEventElapsedTime(&milliseconds, start, stop);
             t_total = milliseconds/1e3;

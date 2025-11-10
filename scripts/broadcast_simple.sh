@@ -33,7 +33,7 @@ mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
 --bind-to numa \
 -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
-../bin/broadcast.out"
+../bin/broadcast_simple.out"
 
 profileWithNsys=" \
 nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
@@ -43,7 +43,7 @@ mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 
 echo "command: ${task_mpi}"
 echo "node = ${PJM_O_NODEINF}"
-echo "root = 0"
+echo "root = 1"
 for i in {1..1}
 do
     echo "iteration: ${i}"
