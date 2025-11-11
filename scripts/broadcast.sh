@@ -43,7 +43,7 @@ mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 
 echo "command: ${task_mpi}"
 echo "node = ${PJM_O_NODEINF}"
-echo "root = 0"
+echo "root = 6"
 for i in {1..1}
 do
     echo "iteration: ${i}"

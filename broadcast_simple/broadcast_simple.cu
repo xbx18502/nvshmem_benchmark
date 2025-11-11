@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
     DATATYPE *h_buffer = NULL;
     DATATYPE *d_source, *d_dest;
     DATATYPE *h_source, *h_dest;
-    int root = 1;
+    int root = 6;
     char size_string[100];
     cudaStream_t cstrm;
     void **h_tables;

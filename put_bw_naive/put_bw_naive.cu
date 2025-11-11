@@ -1,6 +1,9 @@
 #include <cstddef>
 #include <stdio.h>
 #include <iostream>
+#include "device/nvshmem_coll_defines.cuh"
+#include "device/nvshmemx_coll_defines.cuh"
+#include "host/nvshmemx_coll_api.h"
 #include "mpi.h"
 #include "nvshmem.h"
 #include "nvshmemx.h"
@@ -45,7 +48,8 @@ __global__ void bw(double* dest, int size, int peer) {
     int nblocks = gridDim.x;
     int mype = nvshmem_my_pe();
     int npes = nvshmem_n_pes();
-    nvshmemx_double_put_nbi_block(dest + (bid * (size / nblocks)),
+    peer = (mype + 1) % npes;
+    nvshmemx_double_put_block(dest + (bid * (size / nblocks)),
                                   dest + (bid * (size / nblocks)), size / nblocks, peer);
 
 }
@@ -212,13 +216,15 @@ int main (int argc, char *argv[]) {
         }
         //nvshmemx_barrier_all_on_stream(stream);
         //nvshmem_barrier_all();
-        if (0 == global_pe) {
+        if (1) {
             CUDA_CHECK(cudaDeviceSynchronize());
             cudaEventRecord(start);
             for(int i = 0;i<loop;i++){
-                bw<<<4,1024>>> (destination, size, global_pe);
+                bw<<<4,1024,0,stream>>> (destination, size, global_pe);
                 cudaDeviceSynchronize();
                 nvshmem_quiet();
+                nvshmemx_barrier_all_on_stream(stream);
+                CUDA_CHECK(cudaStreamSynchronize(stream));
             }
             // Wait for kernel to complete on device
             CUDA_CHECK(cudaDeviceSynchronize());
@@ -227,10 +233,8 @@ int main (int argc, char *argv[]) {
             // Record end after quiet so timing includes remote completion
             cudaEventRecord(stop);
             CUDA_CHECK(cudaEventSynchronize(stop));
-            nvshmem_barrier_all();
-        }
-        else{
-            nvshmem_barrier_all();
+            nvshmemx_barrier_all_on_stream(stream);
+            CUDA_CHECK(cudaStreamSynchronize(stream));
         }
         //nvshmem_barrier_all();
         // CUDA_CHECK(cudaStreamSynchronize(stream));

@@ -109,8 +109,9 @@ int main (int argc, char *argv[]) {
     nvshmemx_init_attr(NVSHMEMX_INIT_WITH_MPI_COMM, &attr);
     std::cout<<"complete nvshmemx_init_attr"<<std::endl;
     mype_node = nvshmem_team_my_pe(NVSHMEMX_TEAM_NODE);
+    int global_pe = nvshmem_my_pe();
     std::cout<<"complete nvshmemx_init_attr"<<std::endl;
-    CUDA_CHECK(cudaSetDevice(mype_node));
+    CUDA_CHECK(cudaSetDevice(global_pe));
     CUDA_CHECK(cudaStreamCreate(&stream));
     std::cout<<"complete cudaSetDevice"<<std::endl;
     double *destination = (double *) nvshmem_malloc (sizeof(double)*message_size);
@@ -148,7 +149,7 @@ int main (int argc, char *argv[]) {
         }
         //nvshmemx_barrier_all_on_stream(stream);
         //nvshmem_barrier_all();
-        if (0 == mype_node) {
+        if (0 == global_pe) {
             
             
             CUDA_CHECK(cudaDeviceSynchronize());
@@ -159,7 +160,7 @@ int main (int argc, char *argv[]) {
             // CUDA_CHECK(cudaStreamSynchronize(stream));
             cudaEventRecord(start);
             //CUDA_CHECK(cudaEventSynchronize(start));
-            bw2<<<4,1024>>> (destination, counter_d, size, mype_node,loop);
+            bw2<<<4,1024>>> (destination, counter_d, size, global_pe,loop);
             //---------------------
             cudaEventRecord(stop);
             CUDA_CHECK(cudaEventSynchronize(stop));
@@ -177,7 +178,7 @@ int main (int argc, char *argv[]) {
         double mb_total = 0.0;
         double t_total = 0.0;
         float milliseconds = 0.0;
-        if (0 == mype_node) {
+        if (0 == global_pe) {
             mb_total = size * loop *8/ ( 1e6);
             cudaEventElapsedTime(&milliseconds, start, stop);
             t_total = milliseconds/1e3;

@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     uint64_t size_array[MAX_ELEMS_LOG + 1];
     double latency_array[MAX_ELEMS_LOG + 1];
     cudaStream_t stream;
-    int PE_root = 0;
+    int PE_root = 6;
 
     memset(size_array, 0, (MAX_ELEMS_LOG + 1) * sizeof(uint64_t));
     memset(latency_array, 0, (MAX_ELEMS_LOG + 1) * sizeof(double));
