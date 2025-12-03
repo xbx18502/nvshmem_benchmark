@@ -1,6 +1,6 @@
 #!/bin/bash
 #PJM -L rscgrp=b-batch
-#PJM -L node=2
+#PJM -L node=1
 #PJM -L elapse=00:05:00
 #PJM -j
 #PJM -S
@@ -28,7 +28,7 @@ export NVSHMEM_BOOTSTRAP=MPI
 # -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 8 --map-by ppr:4:node \
+-np 4 --map-by ppr:4:node \
 --bind-to numa   \
 ../bin/alltoall.out"
 

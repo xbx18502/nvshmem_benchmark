@@ -38,20 +38,20 @@
     CALL_RDXN(x, _block, TYPENAME, TYPE, xor, INT_MAX, INT_MAX)  \
     CALL_RDXN(x, _block, TYPENAME, TYPE, min, INT_MAX, INT_MAX)  \
     CALL_RDXN(x, _block, TYPENAME, TYPE, max, INT_MAX, INT_MAX)  \
-    CALL_RDXN(x, _warp, TYPENAME, TYPE, sum, warpSize, 4096)     \
-    CALL_RDXN(x, _warp, TYPENAME, TYPE, prod, warpSize, 4096)    \
-    CALL_RDXN(x, _warp, TYPENAME, TYPE, and, warpSize, 4096)     \
-    CALL_RDXN(x, _warp, TYPENAME, TYPE, or, warpSize, 4096)      \
-    CALL_RDXN(x, _warp, TYPENAME, TYPE, xor, warpSize, 4096)     \
-    CALL_RDXN(x, _warp, TYPENAME, TYPE, min, warpSize, 4096)     \
-    CALL_RDXN(x, _warp, TYPENAME, TYPE, max, warpSize, 4096)     \
-    CALL_RDXN(, , TYPENAME, TYPE, sum, 1, 512)                   \
-    CALL_RDXN(, , TYPENAME, TYPE, prod, 1, 512)                  \
-    CALL_RDXN(, , TYPENAME, TYPE, and, 1, 512)                   \
-    CALL_RDXN(, , TYPENAME, TYPE, or, 1, 512)                    \
-    CALL_RDXN(, , TYPENAME, TYPE, xor, 1, 512)                   \
-    CALL_RDXN(, , TYPENAME, TYPE, min, 1, 512)                   \
-    CALL_RDXN(, , TYPENAME, TYPE, max, 1, 512)
+    CALL_RDXN(x, _warp, TYPENAME, TYPE, sum, warpSize, INT_MAX)     \
+    CALL_RDXN(x, _warp, TYPENAME, TYPE, prod, warpSize, INT_MAX)    \
+    CALL_RDXN(x, _warp, TYPENAME, TYPE, and, warpSize, INT_MAX)     \
+    CALL_RDXN(x, _warp, TYPENAME, TYPE, or, warpSize, INT_MAX)      \
+    CALL_RDXN(x, _warp, TYPENAME, TYPE, xor, warpSize, INT_MAX)     \
+    CALL_RDXN(x, _warp, TYPENAME, TYPE, min, warpSize, INT_MAX)     \
+    CALL_RDXN(x, _warp, TYPENAME, TYPE, max, warpSize, INT_MAX)     \
+    CALL_RDXN(, , TYPENAME, TYPE, sum, 1, INT_MAX)                   \
+    CALL_RDXN(, , TYPENAME, TYPE, prod, 1, INT_MAX)                  \
+    CALL_RDXN(, , TYPENAME, TYPE, and, 1, INT_MAX)                   \
+    CALL_RDXN(, , TYPENAME, TYPE, or, 1, INT_MAX)                    \
+    CALL_RDXN(, , TYPENAME, TYPE, xor, 1, INT_MAX)                   \
+    CALL_RDXN(, , TYPENAME, TYPE, min, 1, INT_MAX)                   \
+    CALL_RDXN(, , TYPENAME, TYPE, max, 1, INT_MAX)
 
 CALL_RDXN_OPS_ALL_TG(int32, int32_t)
 CALL_RDXN_OPS_ALL_TG(int64, int64_t)
@@ -143,7 +143,7 @@ int rdxn_calling_kernel(nvshmem_team_t team, void *dest, const void *source, int
     // if (!mype) printf("Transfer size in bytes and latency of thread/warp/block variants of all
     // operations of reduction API in us\n");
     if (run_options.run_thread) {
-        RUN_ITERS(int32, int32_t, , 512);
+        RUN_ITERS(int32, int32_t, , max_elems);
         if (!mype) {
             print_table("device_reduction", "int32-sum-t", "size (Bytes)", "latency", "us", '-',
                         size_arr, h_sum_lat, j);
@@ -161,7 +161,7 @@ int rdxn_calling_kernel(nvshmem_team_t team, void *dest, const void *source, int
                         size_arr, h_max_lat, j);
         }
 
-        RUN_ITERS(int64, int64_t, , 512);
+        RUN_ITERS(int64, int64_t, , max_elems);
         if (!mype) {
             print_table("device_reduction", "int64-sum-t", "size (Bytes)", "latency", "us", '-',
                         size_arr, h_sum_lat, j);
@@ -181,7 +181,7 @@ int rdxn_calling_kernel(nvshmem_team_t team, void *dest, const void *source, int
     }
 
     if (run_options.run_warp) {
-        RUN_ITERS(int32, int32_t, _warp, 4096);
+        RUN_ITERS(int32, int32_t, _warp, max_elems);
         if (!mype) {
             print_table("device_reduction", "int32-sum-w", "size (Bytes)", "latency", "us", '-',
                         size_arr, h_sum_lat, j);
@@ -199,7 +199,7 @@ int rdxn_calling_kernel(nvshmem_team_t team, void *dest, const void *source, int
                         size_arr, h_max_lat, j);
         }
 
-        RUN_ITERS(int64, int64_t, _warp, 4096);
+        RUN_ITERS(int64, int64_t, _warp, max_elems);
         if (!mype) {
             print_table("device_reduction", "int64-sum-w", "size (Bytes)", "latency", "us", '-',
                         size_arr, h_sum_lat, j);

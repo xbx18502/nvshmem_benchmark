@@ -1,6 +1,6 @@
 #!/bin/bash
 #PJM -L rscgrp=b-batch
-#PJM -L node=2
+#PJM -L node=1
 #PJM -L elapse=00:05:00
 #PJM -j
 #PJM -S
@@ -30,7 +30,7 @@ export NVSHMEMTEST_MPI_SUPPORT=1
 # --map-by socket --bind-to socket
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 8 --map-by ppr:4:node \
+-np 4 --map-by ppr:4:node \
 --bind-to numa \
 -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
 ../bin/broadcast_simple.out"
@@ -43,7 +43,7 @@ mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 
 echo "command: ${task_mpi}"
 echo "node = ${PJM_O_NODEINF}"
-echo "root = 3"
+echo "root = 0"
 for i in {1..1}
 do
     echo "iteration: ${i}"

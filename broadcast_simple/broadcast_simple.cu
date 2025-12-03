@@ -15,10 +15,10 @@
         }                                                                                         \
     }
 
-CALL_BCAST(int32, int32_t, , , 1, 512);
-CALL_BCAST(int64, int64_t, , , 1, 512);
-CALL_BCAST(int32, int32_t, x, _warp, warpSize, 4096);
-CALL_BCAST(int64, int64_t, x, _warp, warpSize, 4096);
+CALL_BCAST(int32, int32_t, , , 1, INT_MAX);
+CALL_BCAST(int64, int64_t, , , 1, INT_MAX);
+CALL_BCAST(int32, int32_t, x, _warp, warpSize, INT_MAX);
+CALL_BCAST(int64, int64_t, x, _warp, warpSize, INT_MAX);
 CALL_BCAST(int32, int32_t, x, _block, INT_MAX, INT_MAX);
 CALL_BCAST(int64, int64_t, x, _block, INT_MAX, INT_MAX);
 
@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
     DATATYPE *h_buffer = NULL;
     DATATYPE *d_source, *d_dest;
     DATATYPE *h_source, *h_dest;
-    int root = 6;
+    int root = 0;
     char size_string[100];
     cudaStream_t cstrm;
     void **h_tables;

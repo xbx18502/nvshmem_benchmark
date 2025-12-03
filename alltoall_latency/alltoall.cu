@@ -17,10 +17,10 @@
     }                                                                          \
   }
 
-CALL_ALLTOALL(int32, int32_t, , , 1, 512);
-CALL_ALLTOALL(int64, int64_t, , , 1, 512);
-CALL_ALLTOALL(int32, int32_t, x, _warp, warpSize, 4096);
-CALL_ALLTOALL(int64, int64_t, x, _warp, warpSize, 4096);
+CALL_ALLTOALL(int32, int32_t, , , 1, INT_MAX);
+CALL_ALLTOALL(int64, int64_t, , , 1, INT_MAX);
+CALL_ALLTOALL(int32, int32_t, x, _warp, warpSize, INT_MAX);
+CALL_ALLTOALL(int64, int64_t, x, _warp, warpSize, INT_MAX);
 CALL_ALLTOALL(int32, int32_t, x, _block, INT_MAX, INT_MAX);
 CALL_ALLTOALL(int64, int64_t, x, _block, INT_MAX, INT_MAX);
 
@@ -47,7 +47,7 @@ int alltoall_calling_kernel(nvshmem_team_t team, void *dest, void *source,
 
   nvshmem_barrier_all();
   i = 0;
-  for (num_elems = 1; num_elems < 512; num_elems *= 2) {
+  for (num_elems = 1; num_elems <max_elems; num_elems *= 2) {
     status = nvshmemx_collective_launch(
         (const void *)test_int32_alltoall_call_kern, num_blocks,
         nvshm_test_num_tpb, args_1, 0, stream);
@@ -79,7 +79,7 @@ int alltoall_calling_kernel(nvshmem_team_t team, void *dest, void *source,
   }
 
   i = 0;
-  for (num_elems = 1; num_elems < 4096; num_elems *= 2) {
+  for (num_elems = 1; num_elems < max_elems; num_elems *= 2) {
     status = nvshmemx_collective_launch(
         (const void *)test_int32_alltoall_call_kern_warp, num_blocks,
         nvshm_test_num_tpb, args_1, 0, stream);
@@ -153,7 +153,7 @@ int alltoall_calling_kernel(nvshmem_team_t team, void *dest, void *source,
   }
 
   i = 0;
-  for (num_elems = 1; num_elems < 512; num_elems *= 2) {
+  for (num_elems = 1; num_elems < max_elems; num_elems *= 2) {
     status = nvshmemx_collective_launch(
         (const void *)test_int64_alltoall_call_kern, num_blocks,
         nvshm_test_num_tpb, args_1, 0, stream);
@@ -185,7 +185,7 @@ int alltoall_calling_kernel(nvshmem_team_t team, void *dest, void *source,
   }
 
   i = 0;
-  for (num_elems = 1; num_elems < 4096; num_elems *= 2) {
+  for (num_elems = 1; num_elems < max_elems; num_elems *= 2) {
     status = nvshmemx_collective_launch(
         (const void *)test_int64_alltoall_call_kern_warp, num_blocks,
         nvshm_test_num_tpb, args_1, 0, stream);

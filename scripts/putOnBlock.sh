@@ -1,7 +1,7 @@
 #!/bin/bash
 #PJM -L rscgrp=b-batch
-#PJM -L node=1
-#PJM -L elapse=00:15:00
+#PJM -L node=2
+#PJM -L elapse=00:05:00
 #PJM -j
 #PJM -S
 
@@ -25,23 +25,20 @@ export OMPI_MCA_plm_rsh_agent="/usr/bin/pjrsh"
 
 export NVSHMEM_BOOTSTRAP=MPI
 
-# -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 
-# --map-by socket --bind-to socket
+# -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 4 --map-by ppr:4:node \
---bind-to numa \
--x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
-../bin/reduction.out"
+-np 2 --map-by ppr:1:node \
+--bind-to numa   \
+../bin/putOnBlock.out"
 
 profileWithNsys=" \
 nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
-../bin/reduction.out "
+../bin/alltoall.out"
 
 echo "command: ${task_mpi}"
-echo "node = ${PJM_O_NODEINF}"
 for i in {1..1}
 do
     echo "iteration: ${i}"
