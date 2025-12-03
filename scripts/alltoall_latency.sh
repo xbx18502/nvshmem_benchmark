@@ -29,7 +29,7 @@ export NVSHMEM_BOOTSTRAP=MPI
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 -np 8 --map-by ppr:4:node \
---bind-to socket   \
+--bind-to numa   \
 ../bin/alltoall.out"
 
 profileWithNsys=" \
