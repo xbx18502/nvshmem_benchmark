@@ -25,6 +25,11 @@ export OMPI_MCA_plm_rsh_agent="/usr/bin/pjrsh"
 
 export NVSHMEM_BOOTSTRAP=MPI
 
+# Debug and tracing configuration
+# export NVSHMEM_DEBUG=INFO
+# export NVSHMEM_DEBUG_SUBSYS=INIT,TRANSPORT
+# export NVSHMEM_BOOTSTRAP_TWO_STAGE=1
+export NVSHMEM_NVTX=rma_blocking,rma_nonblocking,memorder,proxy  # Detailed RMA tracing for latency analysis
 # -x NVSHMEMTEST_USE_MPI_LAUNCHER=1 \
 task_mpi=" \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
@@ -33,14 +38,19 @@ mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
 ../bin/putOnBlock.out"
 
 profileWithNsys=" \
-nsys profile --mpi-impl=openmpi -t cuda,nvtx -o mpi_init_put_bw_${PJM_JOBID}_${PJM_JOBID}.qdrep \
+nsys profile --mpi-impl=openmpi -t cuda,nvtx -o putOnBlock_${PJM_JOBID}.qdrep \
 mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
--np 8 --map-by ppr:4:node \
-../bin/alltoall.out"
+--bind-to numa  \
+-np 2 --map-by ppr:1:node \
+../bin/putOnBlock.out"
 
-echo "command: ${task_mpi}"
-for i in {1..1}
-do
-    echo "iteration: ${i}"
-    eval ${task_mpi}
-done
+nvtx=" \
+mpirun -v --display-allocation --display-map -hostfile ${PJM_O_NODEINF} \
+--bind-to numa  \
+-np 2 --map-by ppr:1:node \
+nsys profile --mpi-impl=openmpi -t cuda,nvtx -o putOnBlock_${PJM_JOBID}_%q{OMPI_COMM_WORLD_RANK} \
+../bin/putOnBlock.out"
+
+eval $nvtx
+
+

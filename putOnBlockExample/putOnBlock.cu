@@ -6,6 +6,7 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <nvToolsExt.h>
 #define THREADS_PER_WARP 32
 #define THREADS_PER_BLOCK 1024
 #define num_blocks 4
@@ -114,16 +115,26 @@ __global__ void latency_nbi_warp(int *data_d, volatile unsigned int *counter_d,
 // source: nvshmem/perftest/device/pt-to-pt/shmem_put_latency.cu
 __global__ void latency_nbi(int *data_d, int len, int pe, int iter) {
   int tid = threadIdx.x;
-  int threads = blockDim.x;
   int peer = !pe;
-  int quot = threads ? len / threads : 0;
-  int rem = threads ? len % threads : 0;
-  int base = tid * quot + (tid < rem ? tid : rem);
-  int count = quot + (tid < rem ? 1 : 0);
+  int bid = blockIdx.x;
+  int nblocks = gridDim.x;
+
+  // ✅ 先按block分割数据
+  int base_span = nblocks ? len / nblocks : 0;
+  int rem = nblocks ? len % nblocks : 0;
+  int block_offset = base_span * bid + (bid < rem ? bid : rem);
+  int block_elems = base_span + (bid < rem ? 1 : 0);
+
+  // ✅ 再在每个block内按thread分割
+  int threads = blockDim.x;
+  int quot = threads ? block_elems / threads : 0;
+  int rem_thread = threads ? block_elems % threads : 0;
+  int base = tid * quot + (tid < rem_thread ? tid : rem_thread);
+  int count = quot + (tid < rem_thread ? 1 : 0);
 
   for (int i = 0; i < iter; i++) {
     if (count > 0) {
-      nvshmem_int_put_nbi(data_d + base, data_d + base, count, peer);
+      nvshmem_int_put_nbi(data_d + block_offset + base, data_d + block_offset + base, count, peer);
     }
     __syncthreads();
     if (!tid) {
@@ -139,39 +150,93 @@ __global__ void latency(int *data, size_t nelem, int root, int iter) {
   int npes = nvshmem_n_pes();
   int peer = (mype + 1) % npes;
   int tid = threadIdx.x;
+  int bid = blockIdx.x;
+  int nblocks = gridDim.x;
+
+  // ✅ 先按block分割
+  size_t base_span = nblocks ? nelem / nblocks : 0;
+  size_t rem = nblocks ? nelem % nblocks : 0;
+  size_t block_offset = base_span * bid + (bid < rem ? bid : rem);
+  size_t block_elems = base_span + (bid < rem ? 1 : 0);
+
+  // ✅ 再在block内按thread分割
   int threads = blockDim.x;
-  size_t quot = threads ? nelem / threads : 0;
-  size_t rem = threads ? nelem % threads : 0;
-  size_t base = tid * quot + (tid < rem ? tid : rem);
-  size_t count = quot + (tid < rem ? 1 : 0);
+  size_t quot = threads ? block_elems / threads : 0;
+  size_t rem_thread = threads ? block_elems % threads : 0;
+  size_t base = tid * quot + (tid < rem_thread ? tid : rem_thread);
+  size_t count = quot + (tid < rem_thread ? 1 : 0);
 
   for (int i = 0; i < iter; i++) {
     if (count > 0) {
-      nvshmem_int_put(data + base, data + base, count, peer);
+      nvshmem_int_put(data + block_offset + base, data + block_offset + base, count, peer);
     }
-    nvshmem_fence();
+    __syncthreads();
+    if (!tid) {
+      nvshmem_quiet();
+    }
+    __syncthreads();
   }
 }
 // source: nvshmem/perftest/device/pt-to-pt/shmem_put_latency.cu
-#define LATENCY_THREADGROUP(group)                                             \
-  __global__ void latency_##group(int *data_d, int len, int pe, int iter) {    \
-    int i, tid, peer;                                                          \
-                                                                               \
-    peer = !pe;                                                                \
-    tid = threadIdx.x;                                                         \
-                                                                               \
-    for (i = 0; i < iter; i++) {                                               \
-      nvshmemx_int_put_##group(data_d, data_d, len, peer);                     \
-                                                                               \
-      __syncthreads();                                                         \
-      if (!tid)                                                                \
-        nvshmem_quiet();                                                       \
-      __syncthreads();                                                         \
-    }                                                                          \
-  }
+__global__ void latency_block(int *data_d, int len, int pe, int iter) {
+  int tid = threadIdx.x;
+  int peer = !pe;
+  int bid = blockIdx.x;
+  int nblocks = gridDim.x;
 
-LATENCY_THREADGROUP(warp)
-LATENCY_THREADGROUP(block)
+  int base_span = nblocks ? len / nblocks : 0;
+  int rem = nblocks ? len % nblocks : 0;
+  int block_offset = base_span * bid + (bid < rem ? bid : rem);
+  int block_elems = base_span + (bid < rem ? 1 : 0);
+  int *block_ptr = data_d + block_offset;
+  const bool block_active = block_elems > 0;
+
+  for (int i = 0; i < iter; i++) {
+    if (block_active) {
+      nvshmemx_int_put_block(block_ptr, block_ptr, block_elems, peer);
+    }
+
+    __syncthreads();
+    if (!tid)
+      nvshmem_quiet();
+    __syncthreads();
+  }
+}
+
+__global__ void latency_warp(int *data_d, int len, int pe, int iter) {
+  int tid = threadIdx.x;
+  int peer = !pe;
+  int bid = blockIdx.x;
+  int nblocks = gridDim.x;
+
+  int base_span = nblocks ? len / nblocks : 0;
+  int rem = nblocks ? len % nblocks : 0;
+  int block_offset = base_span * bid + (bid < rem ? bid : rem);
+  int block_elems = base_span + (bid < rem ? 1 : 0);
+
+  int warps_per_block = (blockDim.x + warpSize - 1) / warpSize;
+  if (!warps_per_block)
+    warps_per_block = 1;
+  int warp_id = tid / warpSize;
+  int warp_share = block_elems / warps_per_block;
+  int warp_rem = block_elems % warps_per_block;
+  int warp_offset = warp_share * warp_id +
+                    (warp_id < warp_rem ? warp_id : warp_rem);
+  int warp_elems = warp_share + (warp_id < warp_rem ? 1 : 0);
+  int *warp_ptr = data_d + block_offset + warp_offset;
+  const bool warp_active = warp_id < warps_per_block && warp_elems > 0;
+
+  for (int i = 0; i < iter; i++) {
+    if (warp_active) {
+      nvshmemx_int_put_warp(warp_ptr, warp_ptr, warp_elems, peer);
+    }
+
+    __syncthreads();
+    if (!tid)
+      nvshmem_quiet();
+    __syncthreads();
+  }
+}
 
 int main(int c, char *v[]) {
   int mype, npes, size;
@@ -213,7 +278,7 @@ int main(int c, char *v[]) {
   nvshmem_barrier_all();
 
   CUDA_CHECK(cudaDeviceSynchronize());
-
+  nvtxRangePushA("latency");
   i = 0;
   for (size = sizeof(int); size <= max_msg_size; size *= 2) {
     if (!mype) {
@@ -237,6 +302,7 @@ int main(int c, char *v[]) {
 
     nvshmem_barrier_all();
   }
+  nvtxRangePop();
 
   if (mype == 0) {
     print_table("shmem_put_latency", "Thread", "size (Bytes)", "latency", "us",
@@ -244,6 +310,7 @@ int main(int c, char *v[]) {
   }
 
   i = 0;
+  nvtxRangePushA("latency_warp");
   for (size = sizeof(int); size <= max_msg_size; size *= 2) {
     if (!mype) {
       int nelems;
@@ -268,13 +335,14 @@ int main(int c, char *v[]) {
 
     nvshmem_barrier_all();
   }
-
+  nvtxRangePop();
   if (mype == 0) {
     print_table("shmem_put_latency", "Warp", "size (Bytes)", "latency", "us",
                 '-', h_size_arr, h_lat, i);
   }
 
   i = 0;
+  nvtxRangePushA("latency_block");
   for (size = sizeof(int); size <= max_msg_size; size *= 2) {
     if (!mype) {
       int nelems;
@@ -299,13 +367,14 @@ int main(int c, char *v[]) {
 
     nvshmem_barrier_all();
   }
-
+  nvtxRangePop();
   if (mype == 0) {
     print_table("shmem_put_latency", "Block", "size (Bytes)", "latency", "us",
                 '-', h_size_arr, h_lat, i);
   }
 
   i = 0;
+  nvtxRangePushA("latency_nbi");
   for (size = sizeof(int); size <= max_msg_size; size *= 2) {
     if (!mype) {
       int nelems;
@@ -330,7 +399,7 @@ int main(int c, char *v[]) {
 
     nvshmem_barrier_all();
   }
-
+  nvtxRangePop();
   if (mype == 0) {
     print_table("shmem_put_latency", "nbi thread", "size (Bytes)", "latency",
                 "us", '-', h_size_arr, h_lat, i);
@@ -339,6 +408,7 @@ int main(int c, char *v[]) {
   i = 0;
   unsigned int *counter_d;
   CUDA_CHECK(cudaMalloc((void **)&counter_d, sizeof(unsigned int) * 2));
+  nvtxRangePushA("latency_nbi_warp");
   for (size = sizeof(int); size <= max_msg_size; size *= 2) {
     if (!mype) {
       int nelems;
@@ -366,12 +436,13 @@ int main(int c, char *v[]) {
 
     nvshmem_barrier_all();
   }
-
+  nvtxRangePop();
   if (mype == 0) {
     print_table("shmem_put_latency", "nbi warp", "size (Bytes)", "latency",
                 "us", '-', h_size_arr, h_lat, i);
   }
   i = 0;
+  nvtxRangePushA("latency_nbi_block");
   for (size = sizeof(int); size <= max_msg_size; size *= 2) {
     if (!mype) {
       int nelems;
@@ -399,7 +470,7 @@ int main(int c, char *v[]) {
 
     nvshmem_barrier_all();
   }
-
+  nvtxRangePop();
   if (mype == 0) {
     print_table("shmem_put_latency", "nbi block", "size (Bytes)", "latency",
                 "us", '-', h_size_arr, h_lat, i);

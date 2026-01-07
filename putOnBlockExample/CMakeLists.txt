@@ -61,4 +61,5 @@ target_link_libraries(putOnBlock PRIVATE
     nvidia-ml
     cuda
     cudart
+    nvToolsExt
 )
